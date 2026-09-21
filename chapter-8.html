@@ -1,0 +1,265 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Icepak 案例学习 | 网格与模型改进</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-case-id="chapter-8-mesh-model-enhancement">
+  <header>
+    <div class="wrap">
+      <nav><strong>Icepak 案例学习</strong><span><a href="chapter-9.html" style="color:#dbeafe">体验 Chapter 9：参数化案例</a></span></nav>
+      <div class="hero">
+        <div class="eyebrow">Chapter 8 · Mesh &amp; Model Enhancement</div>
+        <h1>网格与模型改进练习</h1>
+        <p>通过观察、诊断和逐步改进，学习如何减少网格数量，同时保留关键物理特征。</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <aside>
+      <h2>本页目录</h2>
+      <a href="#overview">案例概览</a>
+      <a href="#flow">学习流程</a>
+      <a href="#terms">核心术语</a>
+      <a href="#causal-chain">操作因果。</a>
+      <a href="#steps">操作步骤</a>
+      <a href="#result">结果与检查</a>
+      <a href="#troubleshooting">问题排查</a>
+      <a href="#experiments">探索实验</a>
+      <a href="#practice">复现任务</a>
+      <div class="step-links" id="step-links"><strong>步骤导航</strong></div>
+      <div class="progress-box">
+        <div class="progress-label"><span>学习进度</span><strong id="progress-text">0 / 6</strong></div>
+        <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+      </div>
+    </aside>
+
+    <div>
+      <section id="overview">
+        <h2>案例概览</h2>
+        <p>这是一个以故障排查和建模决策为核心的练习。重点不是机械重复点击，而是判断哪里需要修改、为什么修改，以及如何验证修改有效。</p>
+        <div class="tags">
+          <span class="tag">网格划分</span><span class="tag">非共形网格</span><span class="tag">网格 bleeding</span>
+          <span class="tag">装配</span><span class="tag">局部网格加密</span>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong>中级</strong><span>建议难度</span></div>
+          <div class="stat"><strong>60–90 min</strong><span>预计学习时间</span></div>
+          <div class="stat"><strong>2022 R1</strong><span>官方教程版本</span></div>
+        </div>
+        <div class="status-banner">
+          <strong>内容状态：部分验证</strong>
+          <span>来源版本：Ansys Icepak Tutorials 2022 R1</span>
+          <span>页面已按官方 Markdown 整理，尚未在当前 Icepak 环境中完整复现。</span>
+        </div>
+        <div class="source-note"><span class="source-tag source-verify">版本提醒</span>不同版本可能改变菜单位置、面板名称、网格算法、网格数量和警告信息；官方参考值不应视为所有版本的固定验收值。</div>
+        <div class="note"><strong>文件准备。</strong>项目已包含官方起始模型。请先下载 <a href="Icepak_Tutorial_Package/meshing_tutorial_start.zip" download>meshing_tutorial_start.zip</a>，解压后加载 <code>meshing-tutorial-start.tzr</code>，再另存为工作副本。</div>
+        <h3>学习目标</h3>
+        <div class="source-note"><span class="source-tag source-official">官方文档</span>本案例操作、参数和官方参考结果来自 Ansys Icepak Tutorials 2022 R1 Chapter 8。<span class="source-tag source-explained">教学解释</span>页面中的中文逻辑说明用于帮助理解，不等同于官方原文。<span class="source-tag source-inferred">工程分析</span>推导内容需要结合实际模型验证。</div>
+        <ul>
+          <li>识别网格 bleeding 导致的无效网格区域。</li>
+          <li>使用非共形装配、嵌套非共形网格和局部加密。</li>
+          <li>理解 slack、minimum gap 和 separation tolerance 的作用。</li>
+          <li>比较共形和非共形网格的差异。</li>
+        </ul>
+      </section>
+
+      <section id="flow">
+        <h2>学习流程</h2>
+        <div class="flow"><table>
+          <thead><tr><th>阶段</th><th>主要动作</th><th>参考结。</th></tr></thead>
+          <tbody>
+            <tr><td>基准</td><td>使用 Mesher-HD 生成未经修改的网。</td><td>约 700,000 个单。</td></tr>
+            <tr><td>改进 1</td><td>创建 HS-asy，隔离散热器和相关组。</td><td>约 300,000 个单。</td></tr>
+            <tr><td>改进 2</td><td>创建 hfc-asy，处理高热流组件。</td><td>减少剩余 bleeding</td></tr>
+            <tr><td>改进 3</td><td>创建 super assembly</td><td>约 170,000 个单。</td></tr>
+            <tr><td>加强</td><td>局部加密并比较共形/非共形网。</td><td>关键表面首层小于 1 mm</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="causal-chain">
+        <h2>操作因果。</h2>
+        <p class="muted">这条链说明为什么下一步会接着做，而不是把操作当成孤立菜单。</p>
+        <div class="decision-chain">
+          <div><strong>网格数量过高</strong><br>先生成基准网格，建立可比较的起点。</div>
+          <div><strong>查看网格切面</strong><br>定位细网格是否传播到非关键区域。</div>
+          <div><strong>发现 mesh bleeding</strong><br>创建局部非共形装配，隔离需要细网格的区域。</div>
+          <div><strong>局。。bleeding 仍存。</strong><br>继续建立 hfc-asy 。。super assembly。</div>
+          <div><strong>检查小间隙和薄对象</strong><br>避免只追求少单元而改变关键物理特征。</div>
+          <div><strong>局部加密并比较网格</strong><br>在结果敏感区域补充分辨率，验证精度与成本的平衡。</div>
+        </div>
+        <div class="source-note"><span class="source-tag source-explained">教学解释</span>该因果链根据官方 Chapter 8 的步骤顺序整理，不是官方原文流程图。</div>
+      </section>
+
+      <section id="terms">
+        <h2>核心术语</h2>
+        <div class="glossary">
+          <div class="term"><strong>Mesh bleeding</strong><p>局部细网格向非关键区域传播，导致整体网格数量和计算成本增加。</p></div>
+          <div class="term"><strong>Slack</strong><p>非共形装配边界周围的缓冲区域，通常应容纳约 2。。 个网格单元。</p></div>
+          <div class="term"><strong>Mesh separately</strong><p>让装配体独立生成网格，使局部细网格不必传播到整个模型。</p></div>
+          <div class="term"><strong>Minimum gap</strong><p>网格器处理小间隙的容差设置，可减少无意义间隙，但可能忽略关键薄特征。</p></div>
+          <div class="term"><strong>Super assembly</strong><p>包含子装配的更高层装配，用于限制内部网格范围。</p></div>
+          <div class="term"><strong>Nested non-conformal meshing</strong><p>。。super assembly 中嵌套非共形子装配，也称 recursive embedded meshing。</p></div>
+        </div>
+      </section>
+
+      <section id="steps">
+        <h2>操作步骤</h2>
+        <details class="step" open><summary>步骤 1：生成基准网。</summary><div class="step-body">
+          <div><span class="source-tag source-official">官方操作</span><span class="source-tag source-explained">教学解释</span><span class="source-tag source-verify">需实际验证</span></div>
+          <h4>操作</h4><ol><li>使用 <strong>Mesher-HD</strong>，不修改模型并生成网格。</li><li>记录约 700,000 的初始单元数量。</li><li>从不同方向查看网格切面，识别 bleeding 来源。</li></ol>
+          <h4>背后逻辑</h4><p>基准网格是后续改进的参照。切面把“数量过高”转换成可定位的空间问题。</p>
+          <h4>检查项</h4><ul><li>网格类型是否正确。</li><li>是否记录初始单元数量。</li><li>是否发现从散热器和组件向外扩散的细网格。</li></ul>
+          <h4 class="check-title">验证方法</h4><p>确认使用 Mesher-HD，记录实际单元数量，并保存至少一个能看出 bleeding 的切面截图。实际数量与 700,000 不完全相同并不一定表示失败。</p>
+          <div class="gallery"><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0150.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0150.png" alt=""><span>点击查看。。8.1</span></a></div>
+        </div></details>
+        <details class="step"><summary>步骤 2：创。。HS-asy 非共形装。</summary><div class="step-body">
+          <div><span class="source-tag source-official">官方操作</span><span class="source-tag source-explained">教学解释</span><span class="source-tag source-inferred">工程分析</span></div>
+          <h4>操作</h4><ol><li>选择散热器和被冷却的绿色组件，建。。<code>HS-asy</code>。</li><li>选择 <strong>Mesh separately</strong>，所有方。。slack 设置小于 1 mm。</li><li>使用 Copy global，Max element size 设置。。X=0.015 m、Y=0.01 m、Z=0.0075 m。</li><li>运行 Case Check 后重新生成网格。</li></ol>
+          <h4>背后逻辑</h4><p>局部区域需要细网格，但细网格不应传播到整个机箱。单独网格化可以隔离局部网格。</p>
+          <h4>预期变化</h4><p>网格数量从约 700,000 降至约 300,000。</p>
+          <h4 class="check-title">验证方法</h4><p>运行 Case Check 无错误，确认 HS-asy 对象范围正确，并比较修改前后的单元数量和切面。不要只约 300,000 这个数字作为判断依据。</p>
+          <div class="gallery"><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0151.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0151.png" alt=""><span>点击查看。。8.2a</span></a><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0152.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0152.png" alt=""><span>点击查看。。8.2b</span></a><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0153.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0153.png" alt=""><span>点击查看。。8.3</span></a></div>
+        </div></details>
+        <details class="step"><summary>步骤 3：创。。hfc-asy 非共形装。</summary><div class="step-body">
+          <div><span class="source-tag source-official">官方操作</span><span class="source-tag source-explained">教学解释</span><span class="source-tag source-inferred">工程分析</span></div>
+          <h4>操作</h4><ol><li>查看切面，定。。<code>hi-flux-comp</code> 组件簇的剩余 bleeding。</li><li>建立 <code>hfc-asy</code>，纳。。hi-flux-comp、Tab、Die 。。cylinder-comp。</li><li>设置 slack，确认单位为 mm，重新生成网格并复查切面。</li></ol>
+          <h4>背后逻辑</h4><p>靠近组件的圆柱如果被排除，可能产生过小间隙和高长宽比单元。相关对象一起纳入装配通常更稳定。</p>
+          <h4 class="check-title">验证方法</h4><p>重新查看切面，确。。hi-flux-comp 区域。。bleeding 减少，并检查圆柱、Tab 。。Die 没有造成新的异常间隙。</p>
+          <div class="gallery"><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0154.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0154.png" alt=""><span>点击查看。。8.4</span></a><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0155.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0155.png" alt=""><span>点击查看。。8.5</span></a><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0156.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0156.png" alt=""><span>点击查看。。8.6</span></a><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0157.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0157.png" alt=""><span>点击查看。。8.7</span></a><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0158.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0158.png" alt=""><span>点击查看。。8.8</span></a></div>
+        </div></details>
+        <details class="step"><summary>步骤 4：创。。super assembly</summary><div class="step-body">
+          <div><span class="source-tag source-official">官方操作</span><span class="source-tag source-explained">教学解释</span></div>
+          <h4>操作</h4><ol><li>将机箱内部全部对象建立为单独网格化装配。</li><li>排除机箱本体和开口，所有面设置 1 mm slack。</li><li>生成网格并查。。Y-center 切面。</li></ol>
+          <h4>背后逻辑</h4><p>包含子装配的 super assembly 形成嵌套非共形网格，限制内部细网格，避免其蔓延到机箱外部。</p>
+          <h4>预期变化</h4><p>网格数量参考值约约 170,000 个单元。</p>
+          <h4 class="check-title">验证方法</h4><p>确认网格不再明显蔓延到机箱外部，并记录实际单元数量。官方约 170,000 是参考值，版本和模型差异可能导致不同结果。</p>
+          <div class="gallery"><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0159.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0159.png" alt=""><span>点击查看。。8.9</span></a></div>
+        </div></details>
+        <details class="step"><summary>步骤 5：复。。separation tolerance 。。minimum gap</summary><div class="step-body">
+          <div><span class="source-tag source-official">官方操作</span><span class="source-tag source-inferred">工程分析</span><span class="source-tag source-verify">需实际验证</span></div>
+          <h4>操作</h4><ol><li>。。设置 Minimum gap 为 <code>1e-4 m</code>。</li><li>取消 <strong>Allow minimum gap changes</strong>。</li><li>出现警告后，按对象尺寸判断是否接受建议设置。</li><li>对关键薄对象选择 <strong>Change value and mesh</strong>。</li></ol>
+          <h4>背后逻辑</h4><p>minimum gap 可以消除无意义的小间隙，但过大的设置会忽略关键薄对象。die 的表面积会影响温度预测，不能盲目简化。</p>
+          <h4 class="check-title">验证方法</h4><p>记录警告对象、对象尺寸和最终采用的设置；确认关。。die、Tab 等薄对象仍被正确处理，并检查网格没有因简化而消失。</p>
+          <div class="gallery"><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0160.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0160.png" alt=""><span>点击查看。。8.10</span></a><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0161.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0161.png" alt=""><span>点击查看。。8.11</span></a></div>
+        </div></details>
+        <details class="step"><summary>步骤 6：局部网格加密与网格对比</summary><div class="step-body">
+          <div><span class="source-tag source-official">官方操作</span><span class="source-tag source-explained">教学解释</span><span class="source-tag source-verify">需实际验证</span></div>
+          <h4>操作</h4><ol><li>检查机箱壁、PCB 和关键发热组件。</li><li>。。Local 选项卡使。。Object params 设置局部网格，示例 Element height 。。0.001 m。</li><li>确保关键散热表面首层单元小于 1 mm。</li><li>取消 Mesh assemblies separately，重新生成并比较共形/非共形网格。</li></ol>
+          <h4>背后逻辑</h4><p>对象级局部加密把计算资源集中到温度梯度较大的区域，避免全局加密带来的计算成本。</p>
+          <h4 class="check-title">验证方法</h4><p>检查关键散热表面首层单元是否小小于 1 mm，并分别保存共形和非共形网格的单元数量及切面。</p>
+          <div class="gallery"><a href="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0162.png"><img src="Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0162.png" alt=""><span>点击查看。。8.12</span></a></div>
+        </div></details>
+      </section>
+
+      <section id="result">
+        <h2>结果与检查</h2>
+        <p>这些数值是官方教程的参考值，实际结果可能。。Icepak 版本、网格算法和求解器变化而不同，不应作为唯一验收标准。</p>
+        <div class="comparison">
+          <div class="comparison-card"><strong>。。700k</strong><span>初始模型：发现网。。bleeding</span></div>
+          <div class="comparison-card"><strong>。。300k</strong><span>HS-asy：限制局部细网格</span></div>
+          <div class="comparison-card"><strong>。。170k</strong><span>Super assembly：嵌套非共形网格</span></div>
+        </div>
+        <h3>官方参考值与学习者实际。</h3>
+        <div class="flow"><table>
+          <thead><tr><th>指标</th><th>官方参考。</th><th>我的实际。</th></tr></thead>
+          <tbody>
+            <tr><td>初始网格数量</td><td>约 700,000</td><td><input class="actual-input" data-record="baseline" placeholder="填写实际。"></td></tr>
+            <tr><td>HS-asy 。</td><td>约 300,000</td><td><input class="actual-input" data-record="hs-asy" placeholder="填写实际。"></td></tr>
+            <tr><td>Super assembly 。</td><td>约 170,000</td><td><input class="actual-input" data-record="super-assembly" placeholder="填写实际。"></td></tr>
+            <tr><td>关键表面首层单元</td><td>小于 1 mm</td><td><input class="actual-input" data-record="surface-cell" placeholder="填写实际。"></td></tr>
+          </tbody>
+        </table></div>
+        <ul><li>基准模型：约 700,000 个单元。</li><li>HS-asy 后：约 300,000 个单元。</li><li>Super assembly 后：约 170,000 个单元。</li><li>关键散热表面首层单元：建议小小于 1 mm。</li></ul>
+        <h3>本次实验记录</h3>
+        <label for="software-version">Icepak 版本</label>
+        <input class="actual-input" id="software-version" data-record="software-version" placeholder="例如。。022 R1">
+        <label for="experiment-notes">观察与结。</label>
+        <textarea class="notes" id="experiment-notes" data-record="experiment-notes" placeholder="记录网格切面、警告、参数变化和最终判。"></textarea>
+        <div class="record-actions">
+          <button type="button" id="export-record">导出学习记录</button>
+          <button type="button" class="secondary" id="import-record">导入学习记录</button>
+          <button type="button" class="secondary" id="clear-record">清除本地记录</button>
+          <input type="file" id="record-file" accept="application/json" hidden>
+        </div>
+        <div class="record-status" id="record-status">记录保存在当前浏览器本地，不会上传到服务器。</div>
+        <div class="note"><strong>范围说明。</strong>官方 Chapter 8 不包含问题设置、求解和后处理。本页面将它定位为“网格与模型改进专题”，而不是完整热流场求解案例。</div>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>常见问题排查</h2>
+        <div class="source-note"><span class="source-tag source-explained">教学整理</span>以下排查路径由官方步骤和页面学习目标整理而成；其中“可能原因”不是官方原文，需结合当前模型验证。</div>
+        <div class="path">
+          <div class="path-step"><strong>网格数量没有下降</strong><small>检使用 Mesh separately，再检查装配对象范。。。。检。。slack ，重新生成网格 ，比较切面和单元数量。</small></div>
+          <div class="path-step"><strong>出现 Separation Warning</strong><small>记录警告对象 。。查看对象尺寸 。。判断物理重要。。。。选择处理方式 ，重新生成并检查薄对象。</small></div>
+          <div class="path-step"><strong>网格变少但结果可能不可信</strong><small>检查关键对象是否被忽略 。。检查局部表面分辨率 。。检。。minimum gap 。。对比关键区域网格。</small></div>
+          <div class="path-step"><strong>Case Check 报错</strong><small>检查装配体相交 。。检查对象是否误。。。。检。。slack 重叠 。。修正装配后重新运。。Case Check。</small></div>
+        </div>
+        <ol class="troubleshooting">
+          <li><strong>网格数量没有下降。</strong>检查是否启使用 Mesh separately、装配范围是否过大、slack 是否过大，以及是否重新生成了网格。</li>
+          <li><strong>出现 Separation Warning。</strong>记录警告对象和尺寸，先判断它是否是关键发热或传热部件，再决定是否接受建议设置。</li>
+          <li><strong>网格变少但结果可能不可信。</strong>检查关。。die 是否被忽略、局部表面网格是否过粗，以及 minimum gap 是否大于关键特征尺寸。</li>
+          <li><strong>Case Check 报错。</strong>检查装配体之间是否相交、对象是否误选，以及 slack 区域是否造成不合理重叠。</li>
+        </ol>
+      </section>
+
+      <section id="experiments">
+        <h2>探索实验</h2>
+        <div class="source-note"><span class="source-tag source-inferred">网站设计练习</span>以下参数组合不是官方推荐值，用于观察敏感性；请以实际网格质量和模型物理意义为准。</div>
+        <p>改变 slack 后，记录网格数量、接口质量和是否出现异常。不要只比较单元数量。</p>
+        <div class="flow"><table>
+          <thead><tr><th>Slack</th><th>实际网格数量</th><th>接口观察</th><th>结论</th></tr></thead>
+          <tbody>
+            <tr><td>0.5 mm</td><td><input class="actual-input" data-record="exp-05-count"></td><td><input class="actual-input" data-record="exp-05-observation"></td><td><input class="actual-input" data-record="exp-05-conclusion"></td></tr>
+            <tr><td>1 mm</td><td><input class="actual-input" data-record="exp-10-count"></td><td><input class="actual-input" data-record="exp-10-observation"></td><td><input class="actual-input" data-record="exp-10-conclusion"></td></tr>
+            <tr><td>2 mm</td><td><input class="actual-input" data-record="exp-20-count"></td><td><input class="actual-input" data-record="exp-20-observation"></td><td><input class="actual-input" data-record="exp-20-conclusion"></td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="practice">
+        <h2>复现任务</h2>
+        <p class="muted">建议先独立回答，再点击“查看答案”。答案用于核对思路，不替代。。Icepak 中实际操作和观察。</p>
+        <div class="source-note"><span class="source-tag source-official">官方依据</span>问题均根据 Chapter 8 的操作和结论整理。<span class="source-tag source-explained">答案性质</span>答案包含官方内容整理和教学解释；其中标有“工程分析”的部分不是官方原文。</div>
+        <ol>
+          <li>如何通过网格切面定位网格数量过高的原因？
+            <details class="answer"><summary>查看答案</summary><div class="answer-body"><span class="source-tag source-official">官方内容整理</span><p>先使。。Mesher-HD 生成未经修改的基准网格，再从不同方向和位置查看网格切面，观察细网格是否从散热器、组件或其他局部区域向非关键区域传播。Chapter 8 将这种不必要的传播识别为网格 bleeding。</p></div></details>
+          </li>
+          <li>为什么散热器和高热流组件适合单独网格化？
+            <details class="answer"><summary>查看答案</summary><div class="answer-body"><span class="source-tag source-explained">教学解释</span><p>这些区域通常需要更高的局部分辨率，但整个机箱不需要同样密度的网格。使使用 Mesh separately 可以把局部细网格限制在相关装配体附近，减少其向外传播，从而降低无关区域的单元数量。</p></div></details>
+          </li>
+          <li>slack 为什么不能随意设置为很小或很大？
+            <details class="answer"><summary>查看答案</summary><div class="answer-body"><span class="source-tag source-official">官方内容整理</span><span class="source-tag source-inferred">工程分析</span><p>slack 太小，接口缓冲区域可能没有足够网格单元，或使附近对象产生不良间隙和高长宽比单元；slack 太大，则可能扩大局部细网格区域，增加单元数量。官方建议 slack 区域通常包含2–3 个单元，但具体值应结合模型和网格检查验证。</p></div></details>
+          </li>
+          <li>什么是 nested non-conformal meshing。。
+            <details class="answer"><summary>查看答案</summary><div class="answer-body"><span class="source-tag source-official">官方内容整理</span><p>它是在一个更高层。。super assembly 中包含非共形子装配，使多个局部网格区域嵌套在更大的独立网格区域中。Chapter 8 也将其称。。recursive embedded meshing，用来限制内部网格向机箱外部传播。</p></div></details>
+          </li>
+          <li>minimum gap 何时可能损害结果可信度？
+            <details class="answer"><summary>查看答案</summary><div class="answer-body"><span class="source-tag source-official">官方内容整理</span><span class="source-tag source-inferred">工程分析</span><p>。。minimum gap 大于或接近关键薄对象的尺寸时，网格器可能忽略或改变这些对象。若对象是发热或传热的重要部件，例如 die，其几何表面积会影响温度预测，此时不能只为减少网格数量而接受过度简化。</p></div></details>
+          </li>
+          <li>哪些对象应该局部加密？为什么？
+            <details class="answer"><summary>查看答案</summary><div class="answer-body"><span class="source-tag source-official">官方内容整理</span><span class="source-tag source-explained">教学解释</span><p>应重点检查机箱壁、PCB 和关键发热组件等温度梯度较大的散热表面。局部加密可以把计算资源集中到结果敏感区域；Chapter 8 给出的第一轮分析建议是关键散热表面的首层单元小小于 1 mm，但实际仍需结合网格切面和结果验证。</p></div></details>
+          </li>
+        </ol>
+        <h3>迁移练习</h3>
+        <div class="source-note"><span class="source-tag source-inferred">网站设计练习</span>以下练习不是官方 Chapter 8 的原文任务，用于训练举一反三。</div>
+        <ol>
+          <li>面对一个新。。PCB 和散热器模型，指出可能需要局部加密的区域，并说明判断依据。</li>
+          <li>如果网格只减少了很少，设计一个切面检查顺序，找出仍然存在 bleeding 的区域。</li>
+          <li>比较 slack 。。0.5 mm。。 mm 。。2 mm 时的网格数量与接口质量；记录实际观察，不把这些数值当作通用推荐值。</li>
+          <li>说明一个薄的发热对象为什么不能仅因网格数量过高就删除或忽略。</li>
+        </ol>
+      </section>
+    </div>
+  </main>
+  <footer>来源：Ansys Icepak Tutorials 2022 R1, Chapter 8 · 本页面为学习整理。</footer>
+  <div class="lightbox" id="lightbox" role="dialog" aria-label="图片放大查看">
+    <img id="lightbox-image" src="" alt="">
+  </div>
+  <script src="assets/app.js" defer></script>
+</body>
+</html>

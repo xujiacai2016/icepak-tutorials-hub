@@ -1,0 +1,40 @@
+{
+  "id": "chapter-8-mesh-model-enhancement",
+  "titleZh": "网格与模型改进练习",
+  "source": "Chapter 8",
+  "version": "Ansys Icepak Tutorials 2022 R1",
+  "caseType": "mesh-optimization",
+  "statusLabel": "部分验证",
+  "versionNote": "不同软件版本可能出现菜单、网格算法、单元数量和警告差异。",
+  "summary": "通过观察、诊断和逐步改进，学习如何减少网格数量，同时保留关键物理特征。",
+  "tags": ["网格划分", "非共形网格", "网格 bleeding", "局部网格加密"],
+  "fileNote": "请准备 meshing_tutorial_start.zip，解压后加载 meshing-tutorial-start.tzr。",
+  "learningObjectives": ["识别网格 bleeding 导致的无效网格区域。", "使用非共形装配和局部网格加密。", "理解 slack、minimum gap 和 separation tolerance 的作用。"],
+  "flow": [
+    {"stage": "基准网格", "action": "生成未经修改的网格并查看切面", "check": "记录初始网格数量"},
+    {"stage": "非共形装配", "action": "建立局部装配并重新生成网格", "check": "观察 bleeding 是否减少"},
+    {"stage": "结果比较", "action": "比较网格数量和关键表面分辨率", "check": "保留实际观察记录"}
+  ],
+  "steps": [
+    {
+      "title": "步骤 1：生成基准网格",
+      "operation": "使用 Mesher-HD 生成未经修改的基准网格，并从不同方向查看网格切面。",
+      "logic": "先建立基准，才能判断后续装配和局部加密是否真正减少了无效网格。",
+      "check": "记录初始网格数量，并标记可能存在 bleeding 的区域。",
+      "sources": [{"className": "official", "label": "官方操作"}, {"className": "verify", "label": "需实际验证"}],
+      "images": [{"src": "Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0150.png", "alt": "基准网格", "caption": "官方图 8.1：基准网格"}]
+    },
+    {
+      "title": "步骤 2：建立非共形装配并比较",
+      "operation": "创建局部非共形装配，分别生成网格，再比较切面和单元数量。",
+      "logic": "把高分辨率区域限制在真正需要的位置，避免细网格向整个机箱传播。",
+      "check": "确认局部区域仍有足够网格，并记录修改前后的数量差异。",
+      "sources": [{"className": "official", "label": "官方操作"}, {"className": "explained", "label": "教学解释"}],
+      "images": [{"src": "Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0159.png", "alt": "嵌套非共形网格", "caption": "官方图 8.9：嵌套非共形网格"}]
+    }
+  ],
+  "resultNote": "官方参考值仅用于当前案例和版本对照；请把本机结果标记为学习者观察。",
+  "practice": [
+    {"question": "为什么不能只追求最少网格数量？", "source": {"className": "explained", "label": "教学解释"}, "answer": "关键发热和传热对象仍需要足够分辨率，网格数量必须与物理可信度一起判断。"}
+  ]
+}

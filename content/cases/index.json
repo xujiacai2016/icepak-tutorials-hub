@@ -1,0 +1,50 @@
+{
+  "cases": [
+    {
+      "id": "chapter-8-mesh-model-enhancement",
+      "slug": "chapter-8-mesh-model-enhancement",
+      "title": "Mesh and Model Enhancement Exercise",
+      "titleZh": "网格与模型改进练习",
+      "source": "Ansys Icepak Tutorials 2022 R1, Chapter 8",
+      "difficulty": "intermediate",
+      "caseType": "mesh-optimization",
+      "estimatedTime": "60-90 minutes",
+      "status": "partially-verified",
+      "contentStatusLabel": "部分验证",
+      "legacyPage": "chapter-8.html",
+      "contentNote": "完整操作内容已保留在 Chapter 8 页面；通用页面用于验证 JSON 框架。",
+      "versionNote": "案例来源于 Ansys Icepak Tutorials 2022 R1；不同软件版本可能出现菜单、网格算法、单元数量和警告信息差异。",
+      "tags": [
+        "网格划分",
+        "非共形网格",
+        "网格 bleeding",
+        "装配体",
+        "局部网格加密",
+        "模型改进"
+      ],
+      "image": "Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0159.png"
+    },
+    {
+      "id": "chapter-9-loss-coefficient-hexa-grille",
+      "slug": "chapter-9-loss-coefficient-hexa-grille",
+      "title": "Loss Coefficient for a Hexa-Grille",
+      "titleZh": "六边形格栅损失系数",
+      "source": "Ansys Icepak Tutorials 2022 R1, Chapter 9",
+      "difficulty": "intermediate",
+      "estimatedTime": "60-90 minutes",
+      "status": "draft",
+      "contentStatusLabel": "草稿",
+      "versionNote": "案例来源于 Ansys Icepak Tutorials 2022 R1；不同软件版本可能出现菜单、求解器、网格数量和参数化结果差异。",
+      "caseType": "parameterization-optimization",
+      "tags": [
+        "参数化",
+        "Reynolds 数",
+        "Multiple Trials",
+        "报告函数",
+        "损失系数",
+        "后处理"
+      ],
+      "image": "Ansys_Icepak_Tutorials_2022R1_MD/images/fig_0163.png"
+    }
+  ]
+}

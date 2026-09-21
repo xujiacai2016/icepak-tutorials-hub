@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Icepak Tutorials Hub | 案例首页</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-home-page>
+  <header>
+    <div class="wrap">
+      <nav><strong>Icepak Tutorials Hub</strong><span>案例驱动的 Icepak 学习平台</span></nav>
+      <div class="hero">
+        <div class="eyebrow">Ansys Icepak Case Learning</div>
+        <h1>从官方案例学会 Icepak</h1>
+        <p>通过“操作步骤、背后逻辑、结果验证和迁移练习”的完整闭环，逐步建立独立操作 Icepak 的能力。</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="home-main wrap">
+    <section class="home-intro">
+      <div>
+        <h2>选择一个案例开始学习</h2>
+        <p>每个案例都来自官方教程资料，并标注内容状态、软件版本和验证范围。先完成操作，再理解为什么这样设置，最后记录自己的结果。</p>
+      </div>
+      <div class="home-stats" aria-live="polite">
+        <div class="home-stat"><strong id="case-count">-</strong><span>案例</span></div>
+        <div class="home-stat"><strong id="verified-count">-</strong><span>已验证</span></div>
+        <div class="home-stat"><strong id="in-progress-count">-</strong><span>建设中</span></div>
+      </div>
+    </section>
+
+    <section id="learning-path">
+      <h2>推荐学习方法</h2>
+      <div class="learning-path">
+        <div><strong>1. 了解问题</strong><span>明确模型、物理问题和需要观察的结果。</span></div>
+        <div><strong>2. 跟随操作</strong><span>在 Icepak 中逐步完成官方案例设置。</span></div>
+        <div><strong>3. 理解逻辑</strong><span>理解网格、边界条件和求解参数背后的原因。</span></div>
+        <div><strong>4. 验证并迁移</strong><span>记录本机结果，再把方法应用到新模型。</span></div>
+      </div>
+    </section>
+
+    <section id="case-list-section">
+      <div class="section-heading">
+        <div><h2>案例目录</h2><p class="muted">选择案例后将进入统一的案例学习页面。</p></div>
+        <span class="home-status" id="list-status" aria-live="polite">正在加载案例…</span>
+      </div>
+      <div class="case-grid" id="case-list"><p class="muted">正在读取案例注册表…</p></div>
+    </section>
+  </main>
+
+  <footer>Icepak Tutorials Hub · 内容由官方案例资料整理而成</footer>
+  <script src="assets/case-index.js" defer></script>
+</body>
+</html>
