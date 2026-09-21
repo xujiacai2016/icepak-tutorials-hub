@@ -10,6 +10,11 @@ Node.js、React、数据库或服务器，网页可以直接在 Windows 文件�
 - [chapter-9.html](./chapter-9.html)：Chapter 9 六边形格栅损失系数案例
 - [case.html](./case.html)：新的通用案例页面模板
 - [Icepak_PRD.md](./Icepak_PRD.md)：产品需求文档
+- [DEVELOPMENT_GUIDE.md](./DEVELOPMENT_GUIDE.md)：开发、协作和验证规则
+- [PROJECT_STATUS.md](./PROJECT_STATUS.md)：当前状态、已知限制和下一步
+- [ARCHITECTURE.md](./ARCHITECTURE.md)：页面、数据和脚本关系
+- [CONTENT_GUIDE.md](./CONTENT_GUIDE.md)：新增案例和来源标签规范
+- [CHANGELOG.md](./CHANGELOG.md)：重要修改记录
 
 打开方式：
 
@@ -75,13 +80,17 @@ C:\Users\jxu67\OneDrive - kochind.com\vide coding exercise\6_Icepak_tutorials_Hu
 
 不要以 Copilot 的会话目录作为项目目录。会话目录只保存对话状态，不是项目源代码目录。
 
-### 2. 先阅读三份文档
+### 2. 先阅读项目交接文档
 
 按以下顺序恢复上下文：
 
 1. `README.md`
-2. `Icepak_PRD.md`
-3. `content/case-schema.md`
+2. `DEVELOPMENT_GUIDE.md`
+3. `PROJECT_STATUS.md`
+4. `ARCHITECTURE.md`
+5. `CONTENT_GUIDE.md`
+6. `Icepak_PRD.md`
+7. `content/case-schema.md`
 
 如果要新增案例，再阅读 `content/case-template.md` 和 `content/case-types.md`。
 
